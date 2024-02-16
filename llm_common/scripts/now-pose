@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+
+import rospy
+
+import hsrb_interface
+from skrobot.interfaces.ros.tf_utils import tf_pose_to_coords
+from skrobot.interfaces.ros.transform_listener import TransformListener
+
+def select_command_joint(joint_positions):
+    selected_joint_positions = {}
+    select_joints = ['arm_flex_joint', 'arm_lift_joint', 'arm_roll_joint', 'wrist_flex_joint', 'wrist_roll_joint', 'head_pan_joint', 'head_tilt_joint']
+    for joint in joint_positions:
+        if joint in select_joints:
+            selected_joint_positions[joint] = joint_positions[joint]
+    return selected_joint_positions
+
+def main():
+    rospy.init_node('now_pose', anonymous=True)
+
+    print("Initialize robot interface")
+    robot = hsrb_interface.Robot()
+    from hsrb_interface import settings
+    settings._SETTINGS[u'trajectory']['action_timeout'] = 1
+    whole_body = robot.try_get('whole_body')
+
+    all_joint_positions = whole_body.joint_positions
+    command_joint_positions = select_command_joint(all_joint_positions)
+    print(command_joint_positions)
+
+if __name__ == '__main__':
+    main()

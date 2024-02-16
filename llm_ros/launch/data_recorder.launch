@@ -1,0 +1,36 @@
+<launch>
+  <arg name="filename"/>
+  <arg name="compressed" default="true"/>
+
+  <arg name="camera_info" default="/kinect_head/rgb/camera_info"/>
+  <arg name="image_topic" value="/kinect_head/rgb/image_rect_color" unless="$(arg compressed)"/>
+  <arg name="image_topic" value="/kinect_head/rgb/image_rect_color/compressed" if="$(arg compressed)"/>
+
+  <arg name="depth_topic" value="/kinect_head/depth_registered/image_raw" unless="$(arg compressed)"/>
+  <arg name="depth_topic" value="/kinect_head/depth_registered/image_raw/compressedDepth" if="$(arg compressed)"/>
+
+  <arg name="object_info" default="/tracking_ros/segmentor/output" />
+  <arg name="boxes" default="$(arg object_info)/boxes"/>
+  <arg name="centroid" default="$(arg object_info)/centroid"/>
+
+  <arg name="vqa_info" default="/vqa_node/output/text_gen"/>
+
+  <node name="rosbag_record"
+    pkg="rosbag" type="record"
+    args="-b 0
+    /tf
+    /tf_static
+    /joint_states
+
+    $(arg camera_info)
+    $(arg image_topic)
+    $(arg depth_topic)
+
+    $(arg boxes)
+    $(arg centroid)
+
+    $(arg vqa_info)
+
+    -O $(arg filename)" output="screen">
+  </node>
+</launch>

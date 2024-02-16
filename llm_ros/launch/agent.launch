@@ -1,0 +1,12 @@
+<launch>
+  <arg name="ns" default="llm_agent" />
+  <arg name="record" default="true" />
+
+  <!-- <group ns="$(arg ns)"> -->
+  <!-- </group> -->
+  <include file="$(find llm_ros)/launch/perception.launch"/>
+  <include file="$(find vlm_ros)/launch/sample_vqa.launch"/>
+
+  <!-- record data -->
+  <include file="$(find llm_ros)/launch/data_recorder.launch" if="$(arg record)"/>
+</launch>

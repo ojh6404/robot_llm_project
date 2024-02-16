@@ -1,0 +1,3 @@
+[submodule "vlm_ros"]
+	path = vlm_ros
+	url = https://github.com/ojh6404/vlm_ros.git

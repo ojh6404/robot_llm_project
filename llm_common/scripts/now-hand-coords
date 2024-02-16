@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+
+import rospy
+import hsrb_interface
+import geometry_msgs.msg
+import numpy as np
+import tf
+from skrobot.coordinates import Coordinates
+from skrobot.interfaces.ros.tf_utils import tf_pose_to_coords
+import tf2_ros
+
+import argparse
+
+class NowHandCoords(object):
+
+    def __init__(self):
+        self.sub_bba = None
+        self.bba_msg = None
+
+        self.tfBuffer = tf2_ros.Buffer()
+        self.listener = tf2_ros.TransformListener(self.tfBuffer)
+
+        print("Initialize robot interface")
+        self.robot = hsrb_interface.Robot()
+        from hsrb_interface import settings
+        settings._SETTINGS[u'trajectory']['action_timeout'] = 1
+        self.whole_body = self.robot.try_get('whole_body')
+        settings._SETTINGS[u'trajectory']['action_timeout'] = 30.0
+        self.omni_base = self.robot.try_get('omni_base')
+        self.gripper = self.robot.try_get('gripper')
+
+
+    def run(self, ref_fram):
+        try:
+            map_to_hand_tf = self.tfBuffer.lookup_transform(ref_frame, self.whole_body.end_effector_frame, rospy.Time(0))
+        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
+            print(e)
+            rospy.logwarn("failed to lookup transform")
+            return
+
+        print(map_to_hand_tf)
+
+        coords = Coordinates(
+            pos=np.array([map_to_hand_tf.transform.translation.x,
+                          map_to_hand_tf.transform.translation.y,
+                          map_to_hand_tf.transform.translation.z]),
+            rot=np.array([map_to_hand_tf.transform.rotation.w,
+                          map_to_hand_tf.transform.rotation.x,
+                          map_to_hand_tf.transform.rotation.y,
+                          map_to_hand_tf.transform.rotation.z])
+        )
+
+        print(coords)
+        text = 'skrobot.coordinates.Coordinates(\n    pos=[{}, {}, {}],\n    rot=[{}, {}, {}, {}])'. \
+            format(*(coords.translation.tolist() + coords.quaternion.tolist()))
+        print(text)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='now hand coords of HSR')
+    parser.add_argument('--ref_frame', '-r', default="map", help='reference frame_id')
+
+    args = parser.parse_args()
+    ref_frame = args.ref_frame
+
+    rospy.init_node('now_pose', anonymous=True)
+
+    nhc = NowHandCoords()
+    nhc.run(ref_frame)

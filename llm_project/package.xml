@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>llm_project</name>
+  <version>0.0.1</version>
+  <description>Metapackage for llm_project</description>
+  <maintainer email="oh@jsk.imi.i.u-tokyo.ac.jp">Jihoon Oh</maintainer>
+  <license>BSD</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>llm_common</exec_depend>
+  <exec_depend>llm_common_msgs</exec_depend>
+  <exec_depend>llm_ros</exec_depend>
+  <exec_depend>vlm_ros</exec_depend>
+  <export>
+    <metapackage/>
+  </export>
+</package>

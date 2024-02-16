@@ -1,0 +1,13 @@
+<launch>
+  <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
+  <arg name="vqa" default="false"/>
+
+  <include file="$(find tracking_ros)/launch/grounding_detection.launch" >
+    <arg name="get_mask" value="true"/>
+    <arg name="track" value="true"/>
+  </include>
+  <include file="$(find tracking_ros)/launch/tracking_3d.launch" />
+  <include file="$(find vlm_ros)/launch/sample_vqa.launch" if="$(arg vqa)">
+    <arg name="input_image" value="$(arg input_image)"/>
+  </include>
+</launch>

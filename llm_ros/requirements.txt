@@ -1,0 +1,7 @@
+openai
+gdown
+numpy
+opencv-python
+matplotlib
+pyyaml
+pycocotools
