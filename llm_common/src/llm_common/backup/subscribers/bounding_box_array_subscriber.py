@@ -10,18 +10,14 @@ from jsk_robocup_common.models.box import BoundingBox
 
 class BoundingBoxArraySubscriber(TopicSubscriber):
 
-    def __init__(self,
-                 topic_name,
-                 one_shot=False,
-                 start=True,
-                 wait=False):
+    def __init__(self, topic_name, one_shot=False, start=True, wait=False):
         super(BoundingBoxArraySubscriber, self).__init__(
             topic_name,
             jsk_recognition_msgs.msg.BoundingBoxArray,
             one_shot=one_shot,
             start=start,
-            wait=wait)
+            wait=wait,
+        )
 
     def to_coords(self):
-        return [BoundingBox.from_ros_message(box)
-                for box in self.msg.boxes]
+        return [BoundingBox.from_ros_message(box) for box in self.msg.boxes]

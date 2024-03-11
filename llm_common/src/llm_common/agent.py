@@ -1,52 +1,74 @@
 import os
 import queue
 from typing import List, Union
+
 from openai import OpenAI
+import tiktoken
 
-class Perception(object):
-    def __init__(self) -> None:
-        pass
+from prompt.prompts import SYSTEM_PROMPT, PRIMITIVES
 
-    def get_action(self, prompt: str) -> List:
-        pass
+enc = tiktoken.get_encoding("cl100k_base")
+
 
 class GPTAgent(object):
-    def __init__(self, model: str = "gpt-4", temperature: int = 0) -> None:
+    def __init__(self, model: str = "gpt-4-vision-preview") -> None:
         self.model = model
-        self.temperature = 0
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.stop = None
+        self.seed = 123
+        self.logprobs = True
+        self.top_logprobs = 2
 
-    def query(self,  new_prompt: str, messages: List, role: str = "user") -> Union[List[dict], None]:
-        messages.append({"role":role, "content":new_prompt})
+        self.messages = []
+        self.messages.append({"role": "system", "content": SYSTEM_PROMPT + PRIMITIVES})
+        self.max_token_length = 8000
+        self.max_completion_length = 2000
+        self.last_response = None
+
+    def query(
+        self,
+        prompt: str,
+        temperature: float = 0.0,
+    ) -> Union[str, None]:
+        # if len(enc.encode(prompt_content)) > self.max_token_length - \
+        #         self.max_completion_length:
+        print(self.messages)
         try:
+            messages = self.messages + [{"role": "user", "content": prompt}]
             response = self.client.chat.completions.create(
                 model=self.model,
-                temperature=self.temperature,
                 messages=messages,
-                stream=True
+                max_tokens=self.max_completion_length,
+                temperature=temperature,
+                top_p=0.5,
+                frequency_penalty=0.0,
+                presence_penalty=0.0,
+                stop=self.stop,
+                seed=self.seed,
+                logprobs=self.logprobs,
+                top_logprobs=self.top_logprobs,
             )
-            new_output = ""
-
-            for chunk in response:
-                chunk_content = chunk.choices[0].delta.content
-                finish_reason = chunk.choices[0].finish_reason
-                if chunk_content is not None:
-                    print(chunk_content, end="")
-                    new_output += chunk_content
-                else:
-                    print("finish_reason:", finish_reason)
-            messages.append({"role":"assistant", "content":new_output})
-            return messages
+            answer = response.choices[0].message.content
+            return answer
         except Exception as e:
             print(f"An error occurred: {e}")
             return None
 
+    def reset_messages(self) -> None:
+        self.messages = []
+
+    def create_prompt(self) -> str:
+        pass
+
     def task_parser(self, task: str) -> queue.Queue:
+        """
+        task is like ["DETECT(object)", REACH(object), GRASP()]
+        """
         print("Parsing task...")
 
 
 if __name__ == "__main__":
-    prompt = "Explain the significance of the Turing Test in AI."
-    query = GPTAgent()
-    response_text = query.query(prompt, [], "user")
+    task = "pick up the dish from the table and put it in the dishwasher."
+    agent = GPTAgent(model="gpt-4")
+    response_text = agent.query(task)
     print(response_text)

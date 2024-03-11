@@ -13,10 +13,12 @@ import tmc_msgs.msg
 _sound_play_clients = {}
 
 
-def play_sound(sentence,
-               lang=tmc_msgs.msg.Voice.kJapanese,
-               topic_name='/talk_request_action',
-               wait=False):
+def play_sound(
+    sentence,
+    lang=tmc_msgs.msg.Voice.kJapanese,
+    topic_name="/talk_request_action",
+    wait=False,
+):
     """Plays sound using sound_play server for TMC
 
     Parameters
@@ -36,16 +38,13 @@ def play_sound(sentence,
         return SimpleActionClient
 
     """
-    if lang not in [tmc_msgs.msg.Voice.kEnglish,
-                    tmc_msgs.msg.Voice.kJapanese]:
-        raise ValueError('lang is invalid.')
+    if lang not in [tmc_msgs.msg.Voice.kEnglish, tmc_msgs.msg.Voice.kJapanese]:
+        raise ValueError("lang is invalid.")
 
     if topic_name in _sound_play_clients:
         client = _sound_play_clients[topic_name]
     else:
-        client = actionlib.SimpleActionClient(
-            topic_name,
-            TalkRequestAction)
+        client = actionlib.SimpleActionClient(topic_name, TalkRequestAction)
     client.wait_for_server()
 
     goal = TalkRequestGoal()
@@ -62,9 +61,7 @@ def play_sound(sentence,
     return client
 
 
-def speak_en(sentence,
-             topic_name='/talk_request_action',
-             wait=False):
+def speak_en(sentence, topic_name="/talk_request_action", wait=False):
     """Speak english sentence
 
     Parameters
@@ -91,15 +88,12 @@ def speak_en(sentence,
     >>> speak_en('This is a test sentence', wait=False)
     <actionlib.simple_action_client.SimpleActionClient instance at 0x7fd940979c20>
     """
-    return play_sound(sentence,
-                      lang=tmc_msgs.msg.Voice.kEnglish,
-                      topic_name=topic_name,
-                      wait=wait)
+    return play_sound(
+        sentence, lang=tmc_msgs.msg.Voice.kEnglish, topic_name=topic_name, wait=wait
+    )
 
 
-def speak_jp(sentence,
-             topic_name='/talk_request_action',
-             wait=False):
+def speak_jp(sentence, topic_name="/talk_request_action", wait=False):
     """Speak japanese sentence
 
     Parameters
@@ -126,15 +120,14 @@ def speak_jp(sentence,
     >>> speak_jp('テストです', wait=True)
     <actionlib.simple_action_client.SimpleActionClient instance at 0x7fd940979c20>
     """
-    return play_sound(sentence,
-                      lang=tmc_msgs.msg.Voice.kJapanese,
-                      topic_name=topic_name,
-                      wait=wait)
+    return play_sound(
+        sentence, lang=tmc_msgs.msg.Voice.kJapanese, topic_name=topic_name, wait=wait
+    )
 
 
-def speak_jp_en(jp_sentence, en_sentence,
-                topic_name='/talk_request_action',
-                wait=False):
+def speak_jp_en(
+    jp_sentence, en_sentence, topic_name="/talk_request_action", wait=False
+):
     """Speak japanese or english sentence
 
     This function reads rosparam 'speak_language' and speak
@@ -168,12 +161,10 @@ def speak_jp_en(jp_sentence, en_sentence,
     >>> speak_jp_en('テストです', 'This is a test sentence.')
     """
     speak_language = rospy.get_param("speak_language", None)
-    if speak_language == 'en':
+    if speak_language == "en":
         speak_function = speak_en
         sentence = en_sentence
     else:
         speak_function = speak_jp
         sentence = jp_sentence
-    return speak_function(sentence,
-                          topic_name=topic_name,
-                          wait=wait)
+    return speak_function(sentence, topic_name=topic_name, wait=wait)

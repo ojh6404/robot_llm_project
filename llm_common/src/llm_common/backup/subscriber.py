@@ -5,14 +5,16 @@ import rospy
 
 class TopicSubscriber(object):
 
-    def __init__(self,
-                 topic_name,
-                 cls,
-                 one_shot=False,
-                 start=True,
-                 wait=False,
-                 warn_timeout=10.0,
-                 hook=None):
+    def __init__(
+        self,
+        topic_name,
+        cls,
+        one_shot=False,
+        start=True,
+        wait=False,
+        warn_timeout=10.0,
+        hook=None,
+    ):
         self.hook = hook or []
         self.msg = None
         self.sub = None
@@ -32,10 +34,8 @@ class TopicSubscriber(object):
     def subscribe(self):
         self.msg = None
         self.sub = rospy.Subscriber(
-            self.topic_name,
-            self.cls,
-            callback=self.callback,
-            queue_size=1)
+            self.topic_name, self.cls, callback=self.callback, queue_size=1
+        )
 
     def unsubscribe(self):
         if self.sub is not None:
@@ -61,8 +61,9 @@ class TopicSubscriber(object):
             dt = cur_time - cur_start
             if dt > datetime.timedelta(seconds=self.warn_timeout):
                 dt = cur_time - start
-                rospy.logwarn('Topic {} not received for {} seconds'.
-                              format(self.topic_name, dt))
+                rospy.logwarn(
+                    "Topic {} not received for {} seconds".format(self.topic_name, dt)
+                )
                 cur_start = datetime.datetime.now()
 
     def wait_new_message(self):
@@ -72,21 +73,24 @@ class TopicSubscriber(object):
         ros_start_stamp = rospy.Time.now()
         while not rospy.is_shutdown():
             if self.msg is not None:
-                if hasattr(self.msg, 'header'):
+                if hasattr(self.msg, "header"):
                     cur_stamp = self.msg.header.stamp
                 else:
                     cur_stamp = rospy.Time.now()
                 if (cur_stamp - ros_start_stamp).to_sec() > 0:
                     break
-            if self.msg is not None and \
-                    (self.msg.header.stamp - ros_start_stamp).to_sec() > 0:
+            if (
+                self.msg is not None
+                and (self.msg.header.stamp - ros_start_stamp).to_sec() > 0
+            ):
                 break
             rate.sleep()
             cur_time = datetime.datetime.now()
             dt = cur_time - cur_start
             if dt > datetime.timedelta(seconds=self.warn_timeout):
                 dt = cur_time - start
-                rospy.logwarn('Topic {} not received for {} seconds'.
-                              format(self.topic_name, dt))
+                rospy.logwarn(
+                    "Topic {} not received for {} seconds".format(self.topic_name, dt)
+                )
                 cur_start = datetime.datetime.now()
         return self.msg

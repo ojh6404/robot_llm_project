@@ -18,7 +18,7 @@ from llm_common_msgs.msg import Query, Message
 class AgentNode(object):
     def __init__(self):
         super(AgentNode, self).__init__()
-        self.agent = GPTAgent(model="gpt-4", temperature=0)
+        self.agent = GPTAgent(model="gpt-4")
         self.sub_task_desc = rospy.Subscriber("/llm_agent/task/description", Message, self.task_callback, queue_size=1)
 
 

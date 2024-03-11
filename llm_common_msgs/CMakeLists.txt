@@ -15,10 +15,10 @@ add_message_files(
   TaskSequence.msg
 )
 
-add_service_files(
-    FILES
-    Query.srv
-)
+# add_service_files(
+#     FILES
+#     Query.srv
+# )
 
 generate_messages(
   DEPENDENCIES

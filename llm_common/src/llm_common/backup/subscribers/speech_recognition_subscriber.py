@@ -8,17 +8,16 @@ from jsk_robocup_common.subscriber import TopicSubscriber
 
 class SpeechRecognitionSubscriber(TopicSubscriber):
 
-    def __init__(self,
-                 topic_name='/Tablet/voice',
-                 one_shot=False,
-                 start=True,
-                 wait=False):
+    def __init__(
+        self, topic_name="/Tablet/voice", one_shot=False, start=True, wait=False
+    ):
         super(SpeechRecognitionSubscriber, self).__init__(
             topic_name,
             SpeechRecognitionCandidates,
             one_shot=one_shot,
             start=start,
-            wait=wait)
+            wait=wait,
+        )
 
     def wait_specific_words(self, words):
         rate = rospy.Rate(10)
@@ -35,6 +34,7 @@ class SpeechRecognitionSubscriber(TopicSubscriber):
             dt = cur_time - cur_start
             if dt > datetime.timedelta(seconds=self.warn_timeout):
                 dt = cur_time - start
-                rospy.logwarn('Topic {} not received for {} seconds'.
-                              format(self.topic_name, dt))
+                rospy.logwarn(
+                    "Topic {} not received for {} seconds".format(self.topic_name, dt)
+                )
                 cur_start = datetime.datetime.now()

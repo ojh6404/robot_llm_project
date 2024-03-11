@@ -8,8 +8,8 @@ class ClassificationResultSubscriber(TopicSubscriber):
 
     def __init__(self, topic_name):
         super(ClassificationResultSubscriber, self).__init__(
-            topic_name,
-            jsk_recognition_msgs.msg.ClassificationResult)
+            topic_name, jsk_recognition_msgs.msg.ClassificationResult
+        )
 
     @property
     def max_label(self):
@@ -21,16 +21,21 @@ class ClassificationResultSubscriber(TopicSubscriber):
         rate = rospy.Rate(10)
         while not rospy.is_shutdown():
             rate.sleep()
-            target_score = 'none'
+            target_score = "none"
             if self.msg is not None:
                 index = self.msg.label_names.index(label_name)
                 if index == -1:
-                    rospy.logwarn('[ClassificationResultSubscriber] could not find target_label {}'.format(label_name))
+                    rospy.logwarn(
+                        "[ClassificationResultSubscriber] could not find target_label {}".format(
+                            label_name
+                        )
+                    )
                     continue
                 target_score = self.msg.label_proba[index]
             if target_score > threshold:
                 break
-            rospy.loginfo('[ClassificationResultSubscriber] waiting {} {} > {}'.format(
-                label_name,
-                target_score,
-                threshold))
+            rospy.loginfo(
+                "[ClassificationResultSubscriber] waiting {} {} > {}".format(
+                    label_name, target_score, threshold
+                )
+            )

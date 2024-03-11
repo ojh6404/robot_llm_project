@@ -7,18 +7,14 @@ from jsk_robocup_common.subscriber import TopicSubscriber
 
 class PoseArraySubscriber(TopicSubscriber):
 
-    def __init__(self,
-                 topic_name,
-                 one_shot=False,
-                 start=True,
-                 wait=False):
+    def __init__(self, topic_name, one_shot=False, start=True, wait=False):
         super(PoseArraySubscriber, self).__init__(
             topic_name,
             geometry_msgs.msg.PoseArray,
             one_shot=one_shot,
             start=start,
-            wait=wait)
+            wait=wait,
+        )
 
     def to_coords(self):
-        return [geometry_pose_to_coords(pose)
-                for pose in self.msg.poses]
+        return [geometry_pose_to_coords(pose) for pose in self.msg.poses]

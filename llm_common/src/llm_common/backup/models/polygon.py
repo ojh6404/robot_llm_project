@@ -31,23 +31,17 @@ def area(poly):
 
 
 def unit_normal(a, b, c):
-    x = np.linalg.det([[1, a[1], a[2]],
-                       [1, b[1], b[2]],
-                       [1, c[1], c[2]]])
-    y = np.linalg.det([[a[0], 1, a[2]],
-                       [b[0], 1, b[2]],
-                       [c[0], 1, c[2]]])
-    z = np.linalg.det([[a[0], a[1], 1],
-                       [b[0], b[1], 1],
-                       [c[0], c[1], 1]])
-    magnitude = (x**2 + y**2 + z**2)**.5
+    x = np.linalg.det([[1, a[1], a[2]], [1, b[1], b[2]], [1, c[1], c[2]]])
+    y = np.linalg.det([[a[0], 1, a[2]], [b[0], 1, b[2]], [c[0], 1, c[2]]])
+    z = np.linalg.det([[a[0], a[1], 1], [b[0], b[1], 1], [c[0], c[1], 1]])
+    magnitude = (x**2 + y**2 + z**2) ** 0.5
     return (x / magnitude, y / magnitude, z / magnitude)
 
 
 class Polygon(skrobot.coordinates.CascadedCoords):
 
     def __init__(self, *args, **kwargs):
-        self.points = kwargs.pop('points', [])
+        self.points = kwargs.pop("points", [])
         super(Polygon, self).__init__(*args, **kwargs)
 
     def to_shapely_polygon(self):
@@ -60,10 +54,8 @@ class Polygon(skrobot.coordinates.CascadedCoords):
 
     @property
     def normal(self):
-        points = self.worldcoords().transform_vector(
-            self._points[:3])
-        n = np.cross(points[1] - points[0],
-                     points[2] - points[0])
+        points = self.worldcoords().transform_vector(self._points[:3])
+        n = np.cross(points[1] - points[0], points[2] - points[0])
         n = n / np.linalg.norm(n)
         return n
 
@@ -79,12 +71,11 @@ class Polygon(skrobot.coordinates.CascadedCoords):
     def points(self, points):
         if len(points) <= 2:
             raise ValueError
-        self._points = np.array(points, 'f')
+        self._points = np.array(points, "f")
 
     def distance(self, point):
         shapely_polygon = self.to_shapely_polygon()
-        distance = shapely_polygon.exterior.distance(
-            shapely.geometry.Point(point))
+        distance = shapely_polygon.exterior.distance(shapely.geometry.Point(point))
         return distance
 
     @staticmethod
@@ -92,7 +83,6 @@ class Polygon(skrobot.coordinates.CascadedCoords):
         if isinstance(msg, geometry_msgs.msg.Polygon):
             return Polygon(points=[(p.x, p.y, p.z) for p in msg.points])
         elif isinstance(msg, geometry_msgs.msg.PolygonStamped):
-            return Polygon(points=[(p.x, p.y, p.z)
-                                   for p in msg.polygon.points])
+            return Polygon(points=[(p.x, p.y, p.z) for p in msg.polygon.points])
         else:
-            raise TypeError('Invalid message {}'.format(type(msg)))
+            raise TypeError("Invalid message {}".format(type(msg)))
