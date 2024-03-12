@@ -5,9 +5,8 @@ find_package(catkin REQUIRED COMPONENTS
   catkin_virtualenv
   std_msgs
   jsk_topic_tools
+  dynamic_reconfigure
 )
-
-
 
 catkin_generate_virtualenv(
   INPUT_REQUIREMENTS requirements.txt
@@ -18,6 +17,10 @@ catkin_generate_virtualenv(
 )
 
 catkin_python_setup()
+
+generate_dynamic_reconfigure_options(
+  cfg/CLIP.cfg
+)
 
 catkin_package(
   CATKIN_DEPENDS
