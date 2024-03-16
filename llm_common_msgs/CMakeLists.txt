@@ -10,17 +10,14 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_message_files(
   FILES
-  Query.msg
-  Message.msg
-  Task.msg
   TaskSequence.msg
   ClipResultStamped.msg
 )
 
-# add_service_files(
-#     FILES
-#     Query.srv
-# )
+add_service_files(
+    FILES
+    Query.srv
+)
 
 generate_messages(
   DEPENDENCIES
