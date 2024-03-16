@@ -4,6 +4,7 @@ project(llm_common_msgs)
 find_package(catkin REQUIRED COMPONENTS
   std_msgs
   sensor_msgs
+  jsk_recognition_msgs
   message_generation
 )
 
@@ -13,6 +14,7 @@ add_message_files(
   Message.msg
   Task.msg
   TaskSequence.msg
+  ClipResultStamped.msg
 )
 
 # add_service_files(
@@ -24,6 +26,7 @@ generate_messages(
   DEPENDENCIES
   std_msgs
   sensor_msgs
+  jsk_recognition_msgs
 )
 
 catkin_package(
