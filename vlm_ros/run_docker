@@ -1,0 +1,46 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import argparse
+import subprocess
+from pathlib import Path
+
+_TORCH_CACHE_DIR = Path.home() / ".cache" / "torch"
+_HF_CACHE_DIR = Path.home() / ".cache" / "huggingface"
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="VLM docker runner")
+    parser.add_argument("-p", "--port", default=8888, help="port to run flask server", type=int)
+    parser.add_argument(
+        "-m", "--model", default="honeybee", choices=["honeybee", "llava"], type=str, help="vlm model to run"
+    )
+    parser.add_argument("-s", "--size", default="7B", help="model size", type=str)
+    parser.add_argument("-gpu", "--gpus", default="all", help="gpus to use", type=str)
+    args, unknown = parser.parse_known_args()
+
+    port_option = "{}:8080".format(str(args.port))
+    gpu = "all" if args.gpus == "all" else "device={}".format(args.gpus)
+    docker_image = "{}:latest".format("vlm_ros")
+    torch_cache = "{}:/root/.cache/torch".format(_TORCH_CACHE_DIR)
+    hf_cache = "{}:/root/.cache/huggingface".format(_HF_CACHE_DIR)
+    cmd = [
+        "docker",
+        "run",
+        "-v",
+        torch_cache,
+        "-v",
+        hf_cache,
+        "--rm",
+        "-it",
+        "--gpus",
+        gpu,
+        "-p",
+        port_option,
+        docker_image,
+        args.model,
+        args.size,
+    ]
+    print("Running docker image: {} with model: {} on port: {}".format(docker_image, args.model, args.port))
+    print("Mounting torch cache: {}".format(torch_cache))
+    print("Mounting hf cache: {}".format(hf_cache))
+    subprocess.run(cmd)

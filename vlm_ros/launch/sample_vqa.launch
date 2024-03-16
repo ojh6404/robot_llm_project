@@ -1,0 +1,25 @@
+<launch>
+  <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
+  <arg name="host" default="localhost"/>
+  <arg name="port" default="8888"/>
+  <arg name="task_name" default="text_gen"/>
+  <arg name="gui" default="false" />
+
+  <!-- vqa node -->
+  <node name="vqa_node"
+          pkg="vlm_ros" type="vqa_node.py"
+          output="screen" >
+    <remap from="~input_image" to="$(arg input_image)" />
+    <rosparam subst_value="true" >
+        host: $(arg host)
+        port: $(arg port)
+        task_name: $(arg task_name)
+    </rosparam>
+  </node>
+
+  <!-- gui -->
+  <include file="$(find vlm_ros)/launch/vqa_gui.launch" if="$(arg gui)" >
+      <arg name="prompt_image" value="$(arg input_image)"/>
+  </include>
+
+</launch>

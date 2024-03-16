@@ -1,0 +1,8 @@
+<launch>
+    <arg name="prompt_image" default="/vqa_node/output/prompt_image"/>
+    <node name="vqa_prompt_view" pkg="image_view2" type="image_view2" output="screen" >
+      <remap from="image" to="$(arg prompt_image)" />
+      <param name="use_window" value="true" />
+    </node>
+    <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="$(anon vlm_ros_client_rqt)" />
+</launch>

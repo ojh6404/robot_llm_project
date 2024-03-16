@@ -1,0 +1,3 @@
+[submodule "honeybee"]
+	path = honeybee
+	url = https://github.com/kakaobrain/honeybee.git
