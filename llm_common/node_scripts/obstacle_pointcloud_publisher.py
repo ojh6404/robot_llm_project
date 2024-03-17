@@ -20,8 +20,12 @@ def do_transform_cloud(cloud, transform):
     base_to_map = tf_pose_to_coords(transform)
     points_out = []
     points_in_map = np.array(list(read_points(cloud)))[::2]
-    points_in_base = base_to_map.inverse_transformation().inverse_transform_vector(points_in_map[:, :3])
-    points_out = np.concatenate([points_in_base, points_in_map[:, 3].reshape(-1, 1)], axis=1)
+    points_in_base = base_to_map.inverse_transformation().inverse_transform_vector(
+        points_in_map[:, :3]
+    )
+    points_out = np.concatenate(
+        [points_in_base, points_in_map[:, 3].reshape(-1, 1)], axis=1
+    )
     res = create_cloud(transform.header, cloud.fields, points_out)
     return res
 
@@ -36,12 +40,18 @@ class ObstacleCloudPublisher(object):
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
 
         self.cloud_pub = rospy.Publisher("obstacle_cloud", PointCloud2, queue_size=50)
-        self.cloud_sub = rospy.Subscriber("/head_docker/detic_cluster_point_indices_decomposer/debug_output",
-                                           PointCloud2,
-                                           self.cloud_cb,
-                                           queue_size=1)
-        self.start_service = rospy.Service('obstacle_start_request', Trigger, self.start_service_cb)
-        self.end_service = rospy.Service('obstacle_end_request', Trigger, self.end_service_cb)
+        self.cloud_sub = rospy.Subscriber(
+            "/head_docker/detic_cluster_point_indices_decomposer/debug_output",
+            PointCloud2,
+            self.cloud_cb,
+            queue_size=1,
+        )
+        self.start_service = rospy.Service(
+            "obstacle_start_request", Trigger, self.start_service_cb
+        )
+        self.end_service = rospy.Service(
+            "obstacle_end_request", Trigger, self.end_service_cb
+        )
 
         self.refrence_frame = "map"
         self.publish_frame = "base_range_sensor_link"
@@ -56,9 +66,18 @@ class ObstacleCloudPublisher(object):
         if self.start and not self.exec_flag:
             # Lookup the transform from the map to the PointCloud2 message
             try:
-                self.transform = self.tf_buffer.lookup_transform(self.refrence_frame, msg.header.frame_id, rospy.Time(0), rospy.Duration(1.0))
-            except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
-                rospy.logerr('Failed to lookup transform: {}'.format(e))
+                self.transform = self.tf_buffer.lookup_transform(
+                    self.refrence_frame,
+                    msg.header.frame_id,
+                    rospy.Time(0),
+                    rospy.Duration(1.0),
+                )
+            except (
+                tf2_ros.LookupException,
+                tf2_ros.ConnectivityException,
+                tf2_ros.ExtrapolationException,
+            ) as e:
+                rospy.logerr("Failed to lookup transform: {}".format(e))
                 return
             # Transform the PointCloud2 message to the map frame
             self.pc2_msg_transformed = do_transform_cloud(msg, self.transform)
@@ -68,14 +87,13 @@ class ObstacleCloudPublisher(object):
 
             self.exec_flag = True
 
-
     def start_service_cb(self, req):
-        rospy.loginfo('Started publishing PointCloud2 message.')
+        rospy.loginfo("Started publishing PointCloud2 message.")
         self.start = True
         return TriggerResponse(success=True)
 
     def end_service_cb(self, req):
-        rospy.loginfo('Stopped publishing PointCloud2 message.')
+        rospy.loginfo("Stopped publishing PointCloud2 message.")
         self.start = False
         self.exec_flag = False
         return TriggerResponse(success=True)
@@ -86,18 +104,27 @@ class ObstacleCloudPublisher(object):
             # Lookup the transform from the map to the PointCloud2 message
             stamp = rospy.Time.now()
             try:
-                self.transform = self.tf_buffer.lookup_transform(self.publish_frame, self.refrence_frame,
-                                                                 rospy.Time(0),
-                                                                 # stamp,
-                                                                 # rospy.Time.now(),
-                                                                 rospy.Duration(1.0))
-            except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
-                rospy.logerr('Failed to lookup transform: {}'.format(e))
+                self.transform = self.tf_buffer.lookup_transform(
+                    self.publish_frame,
+                    self.refrence_frame,
+                    rospy.Time(0),
+                    # stamp,
+                    # rospy.Time.now(),
+                    rospy.Duration(1.0),
+                )
+            except (
+                tf2_ros.LookupException,
+                tf2_ros.ConnectivityException,
+                tf2_ros.ExtrapolationException,
+            ) as e:
+                rospy.logerr("Failed to lookup transform: {}".format(e))
                 return
             # end = datetime.now()
             # print("lookup")
             # print(end - start)
-            self.pc2_msg_transformed_pub = do_transform_cloud(self.pc2_msg_transformed, self.transform)
+            self.pc2_msg_transformed_pub = do_transform_cloud(
+                self.pc2_msg_transformed, self.transform
+            )
             # end = datetime.now()
             # print("do_transform_cloud")
             # print(end - start)
@@ -107,7 +134,8 @@ class ObstacleCloudPublisher(object):
             # print("publish")
             # print(end - start)
 
+
 if __name__ == "__main__":
-    rospy.init_node('pointcloud_take_over_publisher')
+    rospy.init_node("pointcloud_take_over_publisher")
     server = ObstacleCloudPublisher()
     rospy.spin()

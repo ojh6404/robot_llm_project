@@ -17,12 +17,13 @@ class QueryBase(object):
                 max_tokens=150,
                 top_p=1.0,
                 frequency_penalty=0.0,
-                presence_penalty=0.0
+                presence_penalty=0.0,
             )
             return response.choices[0].text.strip()
         except Exception as e:
             print(f"An error occurred: {e}")
             return None
+
 
 if __name__ == "__main__":
     prompt = "Explain the significance of the Turing Test in AI."

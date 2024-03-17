@@ -15,15 +15,32 @@ from argparse import ArgumentParser
 
 from pipeline.interface import get_model
 
-MODEL_NAME = ["7B-C-Abs-M144", "7B-D-Abs-M144", "7B-C-Abs-M256", "13B-C-Abs-M256", "13B-D-Abs-M256", "13B-C-Abs-M576"]
+MODEL_NAME = [
+    "7B-C-Abs-M144",
+    "7B-D-Abs-M144",
+    "7B-C-Abs-M256",
+    "13B-C-Abs-M256",
+    "13B-D-Abs-M256",
+    "13B-C-Abs-M576",
+]
+
 
 def parse_args():
     args = ArgumentParser()
-    args.add_argument("--model_name", type=str, default="7B-C-Abs-M256", help="model name to load", choices=MODEL_NAME+["7B", "13B"])
+    args.add_argument(
+        "--model_name",
+        type=str,
+        default="7B-C-Abs-M256",
+        help="model name to load",
+        choices=MODEL_NAME + ["7B", "13B"],
+    )
     args.add_argument("--use_bf16", action="store_true", help="use bf16")
     args.add_argument("--load_in_8bit", action="store_true", help="load in 8bit")
-    args.add_argument("--device", type=str, default="cuda", help="device to use for inference")
+    args.add_argument(
+        "--device", type=str, default="cuda", help="device to use for inference"
+    )
     return args.parse_args()
+
 
 def get_checkpoint_path(model_name):
     # convert model name to the correct format when given abbreviated name
@@ -40,7 +57,9 @@ def get_checkpoint_path(model_name):
     model_path = cache_root / model_name
     if not model_path.exists():
         print(f"Downloading model {model_name} to {model_path}")
-        download_url = f"https://twg.kakaocdn.net/brainrepo/models/honeybee/{model_name}.tar.gz"
+        download_url = (
+            f"https://twg.kakaocdn.net/brainrepo/models/honeybee/{model_name}.tar.gz"
+        )
         response = requests.get(download_url, stream=True)
         total_size_in_bytes = int(response.headers.get("content-length", 0))
         chunk_size = 1024  # 1 KB
@@ -50,7 +69,9 @@ def get_checkpoint_path(model_name):
                 progress_bar.update(len(data))
                 file.write(data)
         progress_bar.close()
-        subprocess.run(["tar", "-xvf", f"{model_path}.tar.gz", "-C", f"{model_path.parent}"])
+        subprocess.run(
+            ["tar", "-xvf", f"{model_path}.tar.gz", "-C", f"{model_path.parent}"]
+        )
         subprocess.run(["rm", f"{model_path}.tar.gz"])
     return model_path / "last"
 
@@ -69,7 +90,9 @@ def infer(query, cvimg, kwargs):
     prompts = [query]
     pilimgs = [Image.fromarray(cv2.cvtColor(cvimg, cv2.COLOR_BGR2RGB))]  # TODO : batch
     inputs = processor(text=prompts, images=pilimgs)
-    inputs = {k: v.bfloat16() if v.dtype == torch.float else v for k, v in inputs.items()}
+    inputs = {
+        k: v.bfloat16() if v.dtype == torch.float else v for k, v in inputs.items()
+    }
     inputs = {k: v.to(model.device) for k, v in inputs.items()}
 
     with torch.no_grad():
@@ -84,10 +107,13 @@ def decode_image(img):
     cvimg = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
     return cvimg
 
+
 # Load trained model
 args = parse_args()
 model_path = get_checkpoint_path(args.model_name)
-model, tokenizer, processor = get_model(model_path, use_bf16=args.use_bf16, load_in_8bit=args.load_in_8bit)
+model, tokenizer, processor = get_model(
+    model_path, use_bf16=args.use_bf16, load_in_8bit=args.load_in_8bit
+)
 model.to(args.device)
 print(f"Model loaded from {model_path}")
 
@@ -95,6 +121,7 @@ print(f"Model loaded from {model_path}")
 if __name__ == "__main__":
     app = Flask(__name__)
     try:
+
         @app.route("/text_gen", methods=["POST"])
         def text_gen_request():
             data = request.get_json()

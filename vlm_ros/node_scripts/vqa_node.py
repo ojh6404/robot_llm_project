@@ -25,7 +25,9 @@ class QueryNode(object):
         self.reconfigure_server = Server(ServerConfig, self.config_cb)
 
         self.bridge = CvBridge()
-        self.pub_text = rospy.Publisher(f"~output/{self.app_name}", String, queue_size=1)
+        self.pub_text = rospy.Publisher(
+            f"~output/{self.app_name}", String, queue_size=1
+        )
         self.sub_img = rospy.Subscriber("~input_image", Image, self.callback)
 
     def config_cb(self, config, level):
@@ -47,7 +49,7 @@ class QueryNode(object):
             result = self.inference(img, [query])
             rospy.loginfo(result["answeres"][0])
             text_msg = String()
-            text_msg.message = result["answeres"][0] # TODO : batch
+            text_msg.message = result["answeres"][0]  # TODO : batch
             self.pub_text.publish(text_msg)
 
     def send_request(self, content, headers=None):
@@ -55,13 +57,17 @@ class QueryNode(object):
         try:
             response = requests.post(url, data=content, headers=headers)
         except ConnectionError as e:
-            rospy.logwarn_once("Cannot establish the connection with API server. Is it running?")
+            rospy.logwarn_once(
+                "Cannot establish the connection with API server. Is it running?"
+            )
             raise e
         else:
             if response.status_code == 200:
                 return response
             else:
-                err_msg = "Invalid http status code: {}".format(str(response.status_code))
+                err_msg = "Invalid http status code: {}".format(
+                    str(response.status_code)
+                )
                 rospy.logerr(err_msg)
                 raise RuntimeError(err_msg)
 
@@ -73,7 +79,9 @@ class QueryNode(object):
     def inference(self, img, queries):
         img_byte = self.cv_img_to_byte(img)
         headers = {"Content-Type": "application/json"}
-        req = json.dumps({"image": img_byte, "queries": queries, "gen_config": self.gen_config})
+        req = json.dumps(
+            {"image": img_byte, "queries": queries, "gen_config": self.gen_config}
+        )
         response = self.send_request(req, headers=headers)
         result = json.loads(response.text)
         return result

@@ -2,12 +2,51 @@ import os
 import queue
 from typing import List, Union
 
+import numpy as np
 from openai import OpenAI
 import tiktoken
+import requests
+import base64
+import cv2
+import json
 
 from prompt.prompts import SYSTEM_PROMPT, PRIMITIVES
 
 enc = tiktoken.get_encoding("cl100k_base")
+
+
+def encode_image(image: np.ndarray) -> str:
+    """
+    encode cv2 image to base64
+    """
+    base64_image = base64.b64encode(cv2.imencode(".jpg", image)[1]).decode("utf-8")
+    return base64_image
+
+
+def create_message(role: str, text: str, image: np.ndarray = None) -> dict:
+    """
+    create a message for the GPT-4 agent
+    role : "user" or "system" # str
+    text : the text of the message # str
+    image : the image of the message # np.ndarray [H, W, 3]
+    """
+    assert role in ["user", "system"]
+
+    if image is None:
+        content = {"role": role, "content": [{"type": "text", "text": text}]}
+    else:
+        base64_image = base64.b64encode(cv2.imencode(".jpg", image)[1]).decode("utf-8")
+        content = {
+            "role": role,
+            "content": [
+                {"type": "text", "text": text},
+                {
+                    "type": "image_url",
+                    "image": f"data:image/jpeg;base64,{base64_image}",
+                },
+            ],
+        }
+    return content
 
 
 class GPTAgent(object):

@@ -3,10 +3,10 @@ from setuptools import setup
 
 
 d = generate_distutils_setup(
-    packages=['llm_ros'],
-    package_dir={'': 'src'},
-    version='0.0.1',
-    install_requires=['setuptools', 'openai', 'opencv-python', 'flask', 'requests'],
+    packages=["llm_ros"],
+    package_dir={"": "src"},
+    version="0.0.1",
+    install_requires=["setuptools", "openai", "opencv-python", "flask", "requests"],
     # author='Jihoon Oh',
     # author_email='oh@jsk.imi.i.u-tokyo.ac.jp',
     # keywords=['ROS'],

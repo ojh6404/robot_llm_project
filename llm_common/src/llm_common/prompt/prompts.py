@@ -34,7 +34,6 @@ In that case, you can insert "ASK_HUMAN_FOR_HELP" in the list, and generate the 
 """
 
 
-
 DESCRIBE_OBJECT = "What does this image describe?"
 DESCRIBE_SCENE = "What is happening in this image?"
 INSPECT_OBJECT = "What is in this image?"

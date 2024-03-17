@@ -27,22 +27,36 @@ from llava.mm_utils import (
     KeywordsStoppingCriteria,
 )
 
+
 def parse_args():
     args = ArgumentParser()
-    args.add_argument("--model_name", type=str, default="7B", help="model name to load", choices=["7B", "13B"])
+    args.add_argument(
+        "--model_name",
+        type=str,
+        default="7B",
+        help="model name to load",
+        choices=["7B", "13B"],
+    )
     args.add_argument("--load_in_8bit", action="store_true", help="load in 8bit")
     args.add_argument("--load_in_4bit", action="store_true", help="load in 4bit")
-    args.add_argument("--device", type=str, default="cuda", help="device to use for inference")
+    args.add_argument(
+        "--device", type=str, default="cuda", help="device to use for inference"
+    )
     return args.parse_args()
 
+
 args = parse_args()
-model_path = "liuhaotian/llava-v1.5-7b" if args.model_name == "7B" else "liuhaotian/llava-v1.5-13b"
+model_path = (
+    "liuhaotian/llava-v1.5-7b"
+    if args.model_name == "7B"
+    else "liuhaotian/llava-v1.5-13b"
+)
 model_name = get_model_name_from_path(model_path)
 if args.load_in_4bit:
     args.load_in_8bit = False
 print(f"Model loaded from {model_path}")
 
-disable_torch_init() # faster loading
+disable_torch_init()  # faster loading
 tokenizer, model, image_processor, context_len = load_pretrained_model(
     model_path=model_path,
     model_base=None,
@@ -93,8 +107,14 @@ def infer(query, cvimg, **kwargs):
     prompt = conv.get_prompt()
 
     images = [Image.fromarray(cv2.cvtColor(cvimg, cv2.COLOR_BGR2RGB))]  # TODO : batch
-    images_tensor = process_images(images, image_processor, model.config).to(model.device, dtype=torch.float16)
-    input_ids = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt").unsqueeze(0).cuda()
+    images_tensor = process_images(images, image_processor, model.config).to(
+        model.device, dtype=torch.float16
+    )
+    input_ids = (
+        tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt")
+        .unsqueeze(0)
+        .cuda()
+    )
 
     stop_str = conv.sep if conv.sep_style != SeparatorStyle.TWO else conv.sep2
     keywords = [stop_str]
@@ -116,8 +136,12 @@ def infer(query, cvimg, **kwargs):
     input_token_len = input_ids.shape[1]
     n_diff_input_output = (input_ids != output_ids[:, :input_token_len]).sum().item()
     if n_diff_input_output > 0:
-        print(f"[Warning] {n_diff_input_output} output_ids are not the same as the input_ids")
-    outputs = tokenizer.batch_decode(output_ids[:, input_token_len:], skip_special_tokens=True)[0]
+        print(
+            f"[Warning] {n_diff_input_output} output_ids are not the same as the input_ids"
+        )
+    outputs = tokenizer.batch_decode(
+        output_ids[:, input_token_len:], skip_special_tokens=True
+    )[0]
     outputs = outputs.strip()
     if outputs.endswith(stop_str):
         outputs = outputs[: -len(stop_str)]
