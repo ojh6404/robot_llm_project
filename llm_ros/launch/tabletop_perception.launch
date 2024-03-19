@@ -1,0 +1,147 @@
+<launch>
+  <arg name="namespace" default="tabletop_perception" />
+  <arg name="standalone" default="false"/> <!-- debug nodes by setting then standalone -->
+  <arg name="decompress" default="false" />
+  <arg name="extract_plane" default="false" />
+  <arg name="MANAGER" value="detection_manager" unless="$(arg standalone)"/>
+  <arg name="MANAGER" value="" if="$(arg standalone)"/>
+  <arg name="LOAD_STATEMENT" value="load" unless="$(arg standalone)"/>
+  <arg name="LOAD_STATEMENT" value="standalone" if="$(arg standalone)"/>
+
+  <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
+  <arg name="input_segmentation" default="/cutie_node/output/segmentation"/>
+  <arg name="input_depth" default="/kinect_head/depth_registered/image_rect"/>
+  <arg name="input_camera_info" default="/kinect_head/rgb/camera_info"/>
+  <arg name="target_frame_id" default="base_footprint" />
+  <arg name="sensor_frame_id" default="head_mount_kinect_rgb_optical_frame" />
+
+  <group ns='$(arg namespace)'>
+    <node name="$(arg MANAGER)" pkg="nodelet" type="nodelet" args="manager"/>
+
+    <include file="$(find tracking_ros)/launch/create_point_cloud.launch" >
+      <arg name="launch_manager" value="false"/> <!-- already launched -->
+      <arg name="manager" value="$(arg MANAGER)"/>
+      <arg name="decompress" value="$(arg decompress)"/>
+      <arg name="namespace" value="$(arg namespace)"/>
+      <arg name="RGB_CAMERA_INFO" value="$(arg input_camera_info)" />
+      <arg name="RGB_IMAGE" value="$(arg input_image)" />
+      <arg name="DEPTH_IMAGE" value="$(arg input_depth)" />
+    </include>
+
+    <node name="multi_plane_estimate" pkg="nodelet" type="nodelet"
+          args="$(arg LOAD_STATEMENT) jsk_pcl/OrganizedMultiPlaneSegmentation $(arg MANAGER)"
+          output="screen">
+      <remap from="~input" to="depth_registered/points" />
+      <rosparam>
+        max_curvature: 0.01
+        estimate_normal: true
+      </rosparam>
+    </node>
+
+    <node name="polygon_magnifier" pkg="nodelet" type="nodelet"
+          args="$(arg LOAD_STATEMENT) jsk_pcl_utils/PolygonMagnifier $(arg MANAGER)"
+          output="screen">
+      <remap from="~input" to="multi_plane_estimate/output_refined_polygon" />
+    </node>
+
+    <node name="plane_extraction" pkg="nodelet" type="nodelet"
+          args="$(arg LOAD_STATEMENT) jsk_pcl/MultiPlaneExtraction $(arg MANAGER)"
+          output="screen">
+      <remap from="~input" to="depth_registered/points" />
+      <remap from="~indices" to="multi_plane_estimate/output_refined" />
+      <remap from="~input_polygons" to="multi_plane_estimate/output_refined_polygon" />
+      <remap from="~input_coefficients" to="multi_plane_estimate/output_refined_coefficients" />
+      <rosparam subst_value="true">
+        use_sensor_frame: true
+        sensor_frame: $(arg sensor_frame_id)
+        min_height: 0.03
+      </rosparam>
+    </node>
+
+    <node name="label_image_to_indices"
+          pkg="nodelet" type="nodelet"
+          args="$(arg LOAD_STATEMENT) jsk_pcl_utils/LabelToClusterPointIndices $(arg MANAGER)">
+      <remap from="~input" to="$(arg input_segmentation)"/>
+      <remap from="~output" to="segmentor/indices"/>
+    </node>
+
+    <!-- cluster_filter: 1 is desirable, but only stable with jsk_recognition/#2739 -->
+
+    <group unless="$(arg extract_plane)">
+      <node name="euclidean_clustering"
+            pkg="nodelet" type="nodelet"
+            args="$(arg LOAD_STATEMENT) jsk_pcl/EuclideanClustering $(arg MANAGER)"
+            clear_params="true">
+        <remap from="~input" to="depth_registered/points"/>
+        <remap from="~input/cluster_indices" to="segmentor/indices"/>
+        <rosparam>
+          multi: true
+          tolerance: 0.03
+          min_size: 10
+          downsample_enable: true
+          approximate_sync: true
+          queue_size: 100
+        </rosparam>
+      </node>
+      <node name="cluster_point_indices_decomposer"
+            pkg="nodelet" type="nodelet"
+            args="$(arg LOAD_STATEMENT) jsk_pcl/ClusterPointIndicesDecomposer $(arg MANAGER)"
+            clear_params="true">
+        <remap from="~input" to="depth_registered/points"/>
+        <remap from="~target" to="euclidean_clustering/output"/>
+        <remap from="~boxes" to="segmentor/output/boxes"/>
+        <remap from="~centroid_pose_array" to="segmentor/output/centroid"/>
+        <rosparam subst_value="true">
+          align_boxes: true
+          align_boxes_with_plane: false
+          force_to_flip_z_axis: false
+          use_pca: true
+          target_frame_id: $(arg target_frame_id)
+          approximate_sync: true
+          queue_size: 100
+          publish_tf: true
+        </rosparam>
+      </node>
+    </group>
+    <group if="$(arg extract_plane)">
+      <node name="euclidean_clustering"
+            pkg="nodelet" type="nodelet"
+            args="$(arg LOAD_STATEMENT) jsk_pcl/EuclideanClustering $(arg MANAGER)"
+            clear_params="true">
+        <remap from="~input" to="plane_extraction/output_nonplane_cloud"/>
+        <remap from="~input/cluster_indices" to="segmentor/indices"/>
+        <rosparam>
+          multi: true
+          tolerance: 0.03
+          min_size: 10
+          downsample_enable: true
+          approximate_sync: true
+          queue_size: 100
+        </rosparam>
+      </node>
+      <node name="cluster_point_indices_decomposer"
+            pkg="nodelet" type="nodelet"
+            args="$(arg LOAD_STATEMENT) jsk_pcl/ClusterPointIndicesDecomposer $(arg MANAGER)"
+            clear_params="true" >
+        <remap from="~input" to="plane_extraction/output_nonplane_cloud" />
+        <remap from="~target" to="euclidean_clustering/output" />
+        <remap from="~align_planes" to="multi_plane_estimate/output_refined_polygon" />
+        <remap from="~align_planes_coefficients"
+              to="multi_plane_estimate/output_refined_coefficients" />
+        <remap from="~boxes" to="segmentor/output/boxes"/>
+        <remap from="~centroid_pose_array" to="segmentor/output/centroid"/>
+        <rosparam subst_value="true">
+          align_boxes: true
+          align_boxes_with_plane: true
+          force_to_flip_z_axis: false
+          use_pca: true
+          target_frame_id: $(arg target_frame_id)
+          approximate_sync: true
+          queue_size: 100
+          publish_tf: true
+        </rosparam>
+      </node>
+    </group>
+
+  </group>
+</launch>
