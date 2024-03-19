@@ -35,7 +35,7 @@
     </node>
 
     <include file="$(find tracking_ros)/launch/create_point_cloud.launch" >
-      <arg name="launch_manager" value="false"/> <!-- already launched -->
+      <arg name="launch_manager" value="false"/>
       <arg name="manager" value="$(arg MANAGER)"/>
       <arg name="decompress" value="$(arg decompress)"/>
       <arg name="namespace" value="$(arg namespace)"/>
