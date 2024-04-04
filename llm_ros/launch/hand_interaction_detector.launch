@@ -1,0 +1,21 @@
+<launch>
+  <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
+  <arg name="hand_detections" default="/hand_object_detection_node/hand_detections"/>
+  <arg name="clip_result" default="/clip_interaction_detector/result"/>
+  <arg name="device" default="cuda"/>
+
+  <node name="hand_joy_node"
+        pkg="llm_ros" type="hand_joy_node.py"
+        output="screen" >
+    <remap from="~hand_detections" to="$(arg hand_detections)" />
+    <remap from="~clip_result" to="$(arg clip_result)" />
+  </node>
+  <node name="clip_interaction_detector"
+        pkg="llm_ros" type="clip_inference_node.py"
+        output="screen" >
+    <remap from="~input_image" to="$(arg input_image)" />
+    <rosparam subst_value="true" >
+        device: $(arg device)
+    </rosparam>
+  </node>
+</launch>
