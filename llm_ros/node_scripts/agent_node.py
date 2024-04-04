@@ -10,7 +10,6 @@ Subscribes:
 
 
 import rospy
-from llm_common.agent import GPTAgent
 from llm_common_msgs.msg import Query, Message
 
 

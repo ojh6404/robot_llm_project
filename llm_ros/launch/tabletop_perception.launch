@@ -62,7 +62,7 @@
     </node>
 
     <node name="plane_extraction" pkg="nodelet" type="nodelet"
-          args="$(arg LOAD_STATEMENT) jsk_pcl/MultiPlaneExtraction $(arg MANAGER)"
+          args="$(arg LOAD_STATEMENT)    jsk_pcl/MultiPlaneExtraction $(arg MANAGER)"
           output="screen">
       <remap from="~input" to="depth_registered/points" />
       <remap from="~indices" to="multi_plane_estimate/output_refined" />

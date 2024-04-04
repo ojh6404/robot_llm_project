@@ -1,4 +1,5 @@
 openai
+tiktoken
 gdown
 numpy
 opencv-python

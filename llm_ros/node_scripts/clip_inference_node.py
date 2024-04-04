@@ -46,20 +46,20 @@ class CLIPInferenceNode(object):
         self.text_input = clip.tokenize(self.desc).to(self.device)
         return config
 
+    @torch.no_grad()
     def image_callback(self, image_msg):
         cv_image = self.bridge.imgmsg_to_cv2(image_msg, desired_encoding="rgb8")
         image = PILImage.fromarray(cv_image)
 
         image_input = self.preprocess(image).unsqueeze(0).to(self.device)
 
-        with torch.no_grad():
-            image_features = self.model.encode_image(image_input)
-            text_features = self.model.encode_text(self.text_input)
+        image_features = self.model.encode_image(image_input)
+        text_features = self.model.encode_text(self.text_input)
 
-            image_features /= image_features.norm(dim=-1, keepdim=True)
-            text_features /= text_features.norm(dim=-1, keepdim=True)
+        image_features /= image_features.norm(dim=-1, keepdim=True)
+        text_features /= text_features.norm(dim=-1, keepdim=True)
 
-            similarity = (100.0 * image_features @ text_features.T).softmax(dim=-1)
+        similarity = (100.0 * image_features @ text_features.T).softmax(dim=-1)
 
         clip_result_msg = ClipResultStamped()
         clip_result_msg.header = image_msg.header

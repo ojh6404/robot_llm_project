@@ -10,10 +10,9 @@ import base64
 import cv2
 import json
 
-from prompt.prompts import SYSTEM_PROMPT, PRIMITIVES
+from llm_common.prompts import SYSTEM_PROMPT, PRIMITIVES
 
 enc = tiktoken.get_encoding("cl100k_base")
-
 
 def encode_image(image: np.ndarray) -> str:
     """
@@ -21,7 +20,6 @@ def encode_image(image: np.ndarray) -> str:
     """
     base64_image = base64.b64encode(cv2.imencode(".jpg", image)[1]).decode("utf-8")
     return base64_image
-
 
 def create_message(role: str, text: str, image: np.ndarray = None) -> dict:
     """
@@ -94,7 +92,10 @@ class GPTAgent(object):
             return None
 
     def reset_messages(self) -> None:
-        self.messages = []
+        self.messages.clear()
+
+    def get_messages(self) -> List[dict]:
+        return self.messages
 
     def create_prompt(self) -> str:
         pass

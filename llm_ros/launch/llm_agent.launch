@@ -1,0 +1,12 @@
+<launch>
+  <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
+  <arg name="device" default="cuda"/>
+
+  <node name="openai_node" pkg="llm_ros" type="openai_node.py" output="screen" >
+  </node>
+
+  <include file="$(find llm_ros)/launch/clip_inference.launch" >
+    <arg name="input_image" value="$(arg input_image)" />
+    <arg name="device" value="$(arg device)" />
+  </include>
+</launch>
