@@ -1,0 +1,6 @@
+# Request
+string              detector
+string              query
+---
+# Response
+bool                result

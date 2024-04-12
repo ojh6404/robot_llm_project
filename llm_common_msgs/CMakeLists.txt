@@ -17,6 +17,7 @@ add_message_files(
 add_service_files(
     FILES
     Query.srv
+    PerceptionReconfigure.srv
 )
 
 generate_messages(
