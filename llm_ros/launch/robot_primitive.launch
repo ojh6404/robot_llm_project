@@ -1,0 +1,14 @@
+<launch>
+  <arg name="robot_name" default="pr2"/>
+  <arg name="primitive_service_name" default="/primitive_motion_node/primitive"/>
+
+  <node name="primitive_motion_node"
+          pkg="llm_ros" type="primitive-motion-node.l"
+          output="screen" >
+    <!-- <remap from="~input_image" to="$(arg input_image)" /> -->
+    <rosparam subst_value="true" >
+        robot_name: $(arg robot_name)
+        primitive_service_name: $(arg primitive_service_name)
+    </rosparam>
+  </node>
+</launch>

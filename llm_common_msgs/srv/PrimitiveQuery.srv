@@ -1,0 +1,5 @@
+# Request
+string              primitive
+---
+# Response
+bool                result

@@ -17,6 +17,7 @@ add_message_files(
 add_service_files(
     FILES
     Query.srv
+    PrimitiveQuery.srv
     PerceptionReconfigure.srv
 )
 

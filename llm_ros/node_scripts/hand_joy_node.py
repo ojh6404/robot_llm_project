@@ -7,7 +7,6 @@ import dynamic_reconfigure.client
 from sensor_msgs.msg import Joy
 from hand_object_detection_ros.msg import HandDetectionArray
 from llm_common_msgs.msg import ClipResultStamped
-from cv_bridge import CvBridge
 
 from dynamic_reconfigure.server import Server
 from llm_ros.cfg import HandDetectionConfig as ServerConfig
