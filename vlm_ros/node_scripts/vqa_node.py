@@ -29,6 +29,7 @@ class QueryNode(object):
             f"~output/{self.app_name}", String, queue_size=1
         )
         self.sub_img = rospy.Subscriber("~input_image", Image, self.callback)
+        self.pub_img = rospy.Publisher("~debug_image", Image, queue_size=1)
 
     def config_cb(self, config, level):
         self.queries = [query.strip() for query in config.queries.split(";")]
@@ -49,8 +50,33 @@ class QueryNode(object):
             result = self.inference(img, [query])
             rospy.loginfo(result["answeres"][0])
             text_msg = String()
-            text_msg.message = result["answeres"][0]  # TODO : batch
+            answer = result["answeres"][0]
+            text_msg.data = answer
             self.pub_text.publish(text_msg)
+
+            # put text on debug image
+            cv2.putText(
+                img,
+                "question : " + query,
+                (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 255, 0),
+                2,
+                cv2.LINE_AA,
+            )
+            cv2.putText(
+                img,
+                "answer : " + answer,
+                (10, 60),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 255, 0),
+                2,
+                cv2.LINE_AA,
+            )
+            img_msg = self.bridge.cv2_to_imgmsg(img, "bgr8")
+            self.pub_img.publish(img_msg)
 
     def send_request(self, content, headers=None):
         url = "http://{}:{}/{}".format(self.host, self.port, self.app_name)
