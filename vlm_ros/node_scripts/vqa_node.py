@@ -28,7 +28,7 @@ class QueryNode(object):
         self.pub_text = rospy.Publisher(
             f"~output/{self.app_name}", String, queue_size=1
         )
-        self.sub_img = rospy.Subscriber("~input_image", Image, self.callback)
+        self.sub_img = rospy.Subscriber("~input_image", Image, self.callback, queue_size=1, buff_size=2**24)
         self.pub_img = rospy.Publisher("~debug_image", Image, queue_size=1)
 
     def config_cb(self, config, level):
