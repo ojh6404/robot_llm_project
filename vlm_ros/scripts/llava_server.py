@@ -27,7 +27,6 @@ from llava.mm_utils import (
 )
 
 
-
 def parse_args():
     args = ArgumentParser()
     args.add_argument(
@@ -35,7 +34,16 @@ def parse_args():
         type=str,
         default="7B",
         help="model name to load",
-        choices=["7B", "13B"],
+        choices=[
+            "llava1.5-7B",
+            "llava1.5-13B",
+            "llava1.5-7B-lora",
+            "llava1.5-13B-lora",
+            "llava1.6-7B",
+            "llava1.6-13B",
+            "mistral-7B",
+            "hermes-34B",
+        ],
     )
     args.add_argument("--load_in_8bit", action="store_true", help="load in 8bit")
     args.add_argument("--load_in_4bit", action="store_true", help="load in 4bit")
@@ -46,11 +54,27 @@ def parse_args():
 
 
 args = parse_args()
-model_path = (
-    "liuhaotian/llava-v1.5-7b"
-    if args.model_name == "7B"
-    else "liuhaotian/llava-v1.5-13b"
-)
+print("model_name", args.model_name)
+
+if args.model_name == "llava1.5-7B":
+    model_path = "liuhaotian/llava-v1.5-7b"
+elif args.model_name == "llava1.5-13B":
+    model_path = "liuhaotian/llava-v1.5-13b"
+elif args.model_name == "llava1.5-7B-lora":
+    model_path = "liuhaotian/llava-v1.5-7b-lora"
+elif args.model_name == "llava1.5-13B-lora":
+    model_path = "liuhaotian/llava-v1.5-13b-lora"
+elif args.model_name == "llava1.6-7B":
+    model_path = "liuhaotian/llava-v1.6-vicuna-7b"
+elif args.model_name == "llava1.6-13B":
+    model_path = "liuhaotian/llava-v1.6-vicuna-13b"
+elif args.model_name == "mistral-7B":
+    model_path = "liuhaotian/llava-v1.6-mistral-7b"
+elif args.model_name == "hermes-34B":
+    model_path = "liuhaotian/llava-v1.6-34b"
+else:
+    raise ValueError("Invalid model name")
+
 model_name = get_model_name_from_path(model_path)
 if args.load_in_4bit:
     args.load_in_8bit = False
