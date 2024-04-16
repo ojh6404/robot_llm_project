@@ -3,6 +3,7 @@
   <arg name="host" default="localhost"/>
   <arg name="port" default="8888"/>
   <arg name="task_name" default="text_gen"/>
+  <arg name="output_logits" default="true" />
   <arg name="gui" default="false" />
 
   <!-- vqa node -->
@@ -14,6 +15,7 @@
         host: $(arg host)
         port: $(arg port)
         task_name: $(arg task_name)
+        output_logits: $(arg output_logits)
     </rosparam>
   </node>
 

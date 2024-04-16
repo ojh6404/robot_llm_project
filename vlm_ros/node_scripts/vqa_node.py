@@ -11,7 +11,7 @@ import rospy
 from dynamic_reconfigure.server import Server
 from vlm_ros.cfg import VLMConfig as ServerConfig
 from cv_bridge import CvBridge, CvBridgeError
-from std_msgs.msg import String
+from std_msgs.msg import String, Float32MultiArray, Int64MultiArray
 from sensor_msgs.msg import Image
 
 
@@ -21,6 +21,7 @@ class QueryNode(object):
         self.host = rospy.get_param("~host", "localhost")
         self.port = rospy.get_param("~port", 8888)
         self.app_name = rospy.get_param("~task_name", "text_gen")
+        self.output_logits = rospy.get_param("~output_logits", False)
         self.gen_config = dict()  # placeholder
         self.reconfigure_server = Server(ServerConfig, self.config_cb)
 
@@ -29,13 +30,20 @@ class QueryNode(object):
             f"~output/{self.app_name}", String, queue_size=1
         )
         self.sub_img = rospy.Subscriber("~input_image", Image, self.callback, queue_size=1, buff_size=2**24)
-        self.pub_img = rospy.Publisher("~debug_image", Image, queue_size=1)
+        self.pub_img = rospy.Publisher("~output/debug_image", Image, queue_size=1)
+        if self.output_logits:
+            self.pub_logits = rospy.Publisher("~output/logits", Float32MultiArray, queue_size=1)
+            self.pub_token_ids = rospy.Publisher("~output/token_ids", Int64MultiArray, queue_size=1)
+
+
 
     def config_cb(self, config, level):
         self.queries = [query.strip() for query in config.queries.split(";")]
         self.gen_config["do_sample"] = config.do_sample
         self.gen_config["top_k"] = config.top_k
         self.gen_config["max_length"] = config.max_length
+        self.gen_config["temperature"] = config.temperature
+        rospy.loginfo("Reconfigure Request: {}".format(config))
         return config
 
     def callback(self, msg):
@@ -48,9 +56,22 @@ class QueryNode(object):
             # TODO : batch
             query = self.queries[0].replace("\\n", "\n")
             result = self.inference(img, [query])
-            rospy.loginfo(result["answeres"][0])
             text_msg = String()
-            answer = result["answeres"][0]
+            info_log = ""
+            answer = result["answers"][0]
+            if "top_p_output_logits" in result:
+                logits = result["top_p_output_logits"]["logits"]
+                token_ids = result["top_p_output_logits"]["token_ids"]
+                info_log += "logits : {}\n".format(logits)
+                info_log += "token_ids : {}\n".format(token_ids)
+                if self.output_logits:
+                    logits_msg = Float32MultiArray()
+                    token_ids_msg = Int64MultiArray()
+                    logits_msg.data = logits
+                    token_ids_msg.data = token_ids
+                    self.pub_logits.publish(logits_msg)
+                    self.pub_token_ids.publish(token_ids_msg)
+            rospy.loginfo(info_log + "answer : {}".format(answer))
             text_msg.data = answer
             self.pub_text.publish(text_msg)
 

@@ -131,7 +131,7 @@ if __name__ == "__main__":
             queries = data["queries"]
             query = construct_input_prompt(queries[0])  # TODO : batch
             sentences = infer(query, cvimg, gen_config)
-            response = {"queries": queries, "answeres": sentences}
+            response = {"queries": queries, "answers": sentences}
             return jsonify(response)
 
     except NameError:

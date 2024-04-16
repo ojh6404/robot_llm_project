@@ -12,9 +12,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="VLM docker runner")
     parser.add_argument("-p", "--port", default=8888, help="port to run flask server", type=int)
     parser.add_argument(
-        "-m", "--model", default="honeybee", choices=["honeybee", "llava"], type=str, help="vlm model to run"
+        "-m", "--model", default="llava", choices=["honeybee", "llava"], type=str, help="vlm model to run"
     )
-    parser.add_argument("-s", "--size", default="7B", help="model size", type=str)
+    parser.add_argument("-s", "--size", default="llava1.6-7B", help="model size", type=str)
     parser.add_argument("-gpu", "--gpus", default="all", help="gpus to use", type=str)
     args, unknown = parser.parse_known_args()
 

@@ -54,8 +54,6 @@ def parse_args():
 
 
 args = parse_args()
-print("model_name", args.model_name)
-
 if args.model_name == "llava1.5-7B":
     model_path = "liuhaotian/llava-v1.5-7b"
 elif args.model_name == "llava1.5-13B":
@@ -134,6 +132,7 @@ def infer(query, cvimg, **kwargs):
     conv.append_message(conv.roles[1], None)
     prompt = conv.get_prompt()
 
+
     images = [Image.fromarray(cv2.cvtColor(cvimg, cv2.COLOR_BGR2RGB))]  # TODO : batch
     image_sizes = [image.size for image in images]
     images_tensor = process_images(images, image_processor, model.config).to(
@@ -146,7 +145,7 @@ def infer(query, cvimg, **kwargs):
     )
 
     with torch.inference_mode():
-        output_ids = model.generate(
+        generation_output = model.generate(
             input_ids,
             images=images_tensor,
             image_sizes=image_sizes,
@@ -156,9 +155,24 @@ def infer(query, cvimg, **kwargs):
             num_beams=kwargs["num_beams"],
             max_new_tokens=kwargs["max_new_tokens"],
             use_cache=True,
+            return_dict_in_generate=True,
+            output_scores=True,
         )
+    output_ids = generation_output.sequences
     outputs = tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0].strip()
-    return outputs
+    top_p_output_logits = {"token_ids": [], "logits": []}
+    for i, score in enumerate(generation_output.scores):
+        logits, indices = torch.topk(score, k=kwargs["top_p"])
+        logits = logits.cpu().numpy().tolist()
+        token_ids = indices.cpu().numpy().tolist()
+        top_p_output_logits["logits"].append(logits)
+        top_p_output_logits["token_ids"].append(token_ids)
+
+    # No: 1939, Yes: 3869
+    # 997, 16002
+    # 5196, 415
+    # 20972
+    return outputs, top_p_output_logits
 
 
 def decode_image(img):
@@ -175,7 +189,7 @@ def process_config(config):
     config["max_new_tokens"] = config.get("max_length", 512)
     if "max_length" in config:
         del config["max_length"]
-    config["temperature"] = config.get("temperature", 0)
+    config["temperature"] = config.get("temperature", 0.2)
     config["do_sample"] = True if config["temperature"] > 0 else False
     config["num_beams"] = config.get("num_beams", 1)
     config["conv_mode"] = config.get("conv_mode", None)
@@ -195,9 +209,9 @@ if __name__ == "__main__":
             cvimg = decode_image(img)
             queries = data["queries"]  # TODO : batch
             query = queries[0]
-            sentences = infer(query, cvimg, **gen_config)
+            sentences, top_p_output_logits = infer(query, cvimg, **gen_config)
             sentences = [sentences]
-            response = {"queries": queries, "answeres": sentences}
+            response = {"queries": queries, "answers": sentences, "top_p_output_logits": top_p_output_logits}
             return jsonify(response)
 
     except NameError:
