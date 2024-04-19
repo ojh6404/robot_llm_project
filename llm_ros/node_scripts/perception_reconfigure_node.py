@@ -45,7 +45,7 @@ class PerceptionReconfigureNode(object):
             seg_topic = self.vlpart_node + "/output/segmentation"
         elif detector == "vqa":
             self.vqa_client = dynamic_reconfigure.client.Client(self.vqa_node)
-            self.vqa_client.update_configuration({"question": detection_query})
+            self.vqa_client.update_configuration({"queries": detection_query})
         elif detector == "clip":
             self.clip_client = dynamic_reconfigure.client.Client(self.clip_node)
             self.clip_client.update_configuration({"description": detection_query})
