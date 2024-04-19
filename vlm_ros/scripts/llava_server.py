@@ -163,8 +163,8 @@ def infer(query, cvimg, **kwargs):
     top_p_output_logits = {"token_ids": [], "logits": []}
     for i, score in enumerate(generation_output.scores):
         logits, indices = torch.topk(score, k=kwargs["top_p"])
-        logits = logits.cpu().numpy().tolist()
-        token_ids = indices.cpu().numpy().tolist()
+        logits = logits.squeeze().cpu().numpy().tolist()
+        token_ids = indices.squeeze().cpu().numpy().tolist()
         top_p_output_logits["logits"].append(logits)
         top_p_output_logits["token_ids"].append(token_ids)
 

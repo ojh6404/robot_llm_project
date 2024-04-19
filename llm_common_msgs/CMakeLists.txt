@@ -12,6 +12,9 @@ add_message_files(
   FILES
   TaskSequence.msg
   ClipResultStamped.msg
+  Float32MultiArrayStamped.msg
+  Int64MultiArrayStamped.msg
+  GenerationOutput.msg
 )
 
 add_service_files(

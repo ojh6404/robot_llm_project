@@ -11,7 +11,12 @@ import rospy
 from dynamic_reconfigure.server import Server
 from vlm_ros.cfg import VLMConfig as ServerConfig
 from cv_bridge import CvBridge, CvBridgeError
-from std_msgs.msg import String, Float32MultiArray, Int64MultiArray
+from std_msgs.msg import String
+from llm_common_msgs.msg import (
+    Float32MultiArrayStamped,
+    Int64MultiArrayStamped,
+    GenerationOutput,
+)
 from sensor_msgs.msg import Image
 
 
@@ -29,13 +34,13 @@ class QueryNode(object):
         self.pub_text = rospy.Publisher(
             f"~output/{self.app_name}", String, queue_size=1
         )
-        self.sub_img = rospy.Subscriber("~input_image", Image, self.callback, queue_size=1, buff_size=2**24)
+        self.pub_gen_output = rospy.Publisher(
+            f"~output/generation_output", GenerationOutput, queue_size=1
+        )
+        self.sub_img = rospy.Subscriber(
+            "~input_image", Image, self.callback, queue_size=1, buff_size=2**24
+        )
         self.pub_img = rospy.Publisher("~output/debug_image", Image, queue_size=1)
-        if self.output_logits:
-            self.pub_logits = rospy.Publisher("~output/logits", Float32MultiArray, queue_size=1)
-            self.pub_token_ids = rospy.Publisher("~output/token_ids", Int64MultiArray, queue_size=1)
-
-
 
     def config_cb(self, config, level):
         self.queries = [query.strip() for query in config.queries.split(";")]
@@ -57,23 +62,31 @@ class QueryNode(object):
             query = self.queries[0].replace("\\n", "\n")
             result = self.inference(img, [query])
             text_msg = String()
+            generation_output_msg = GenerationOutput(header=msg.header)
             info_log = ""
             answer = result["answers"][0]
             if "top_p_output_logits" in result:
-                logits = result["top_p_output_logits"]["logits"]
-                token_ids = result["top_p_output_logits"]["token_ids"]
+                logits = result["top_p_output_logits"]["logits"]  # (text_length, top_p)
+                token_ids = result["top_p_output_logits"][
+                    "token_ids"
+                ]  # (text_length, top_p)
                 info_log += "logits : {}\n".format(logits)
                 info_log += "token_ids : {}\n".format(token_ids)
                 if self.output_logits:
-                    logits_msg = Float32MultiArray()
-                    token_ids_msg = Int64MultiArray()
-                    logits_msg.data = logits
-                    token_ids_msg.data = token_ids
-                    self.pub_logits.publish(logits_msg)
-                    self.pub_token_ids.publish(token_ids_msg)
+                    logits_data = []
+                    tokend_ids_data = []
+                    for logit, token_id in zip(logits, token_ids):
+                        logit_msg = Float32MultiArrayStamped(data=logit)
+                        token_id_msg = Int64MultiArrayStamped(data=token_id)
+                        logits_data.append(logit_msg)
+                        tokend_ids_data.append(token_id_msg)
+                    generation_output_msg.logits = logits_data
+                    generation_output_msg.token_ids = tokend_ids_data
             rospy.loginfo(info_log + "answer : {}".format(answer))
             text_msg.data = answer
+            generation_output_msg.gen_output = answer
             self.pub_text.publish(text_msg)
+            self.pub_gen_output.publish(generation_output_msg)
 
             # put text on debug image
             cv2.putText(
