@@ -2,19 +2,19 @@ cmake_minimum_required(VERSION 3.0.2)
 project(llm_ros)
 
 find_package(catkin REQUIRED COMPONENTS
-  # catkin_virtualenv
+  catkin_virtualenv
   std_msgs
   jsk_topic_tools
   dynamic_reconfigure
 )
 
-# catkin_generate_virtualenv(
-#   INPUT_REQUIREMENTS requirements.txt
-#   PYTHON_INTERPRETER python3.8
-#   USE_SYSTEM_PACKAGES TRUE
-#   ISOLATE_REQUIREMENTS FALSE
-#   CHECK_VENV FALSE
-# )
+catkin_generate_virtualenv(
+  INPUT_REQUIREMENTS requirements.txt
+  PYTHON_INTERPRETER python3.8
+  USE_SYSTEM_PACKAGES FALSE
+  ISOLATE_REQUIREMENTS FALSE
+  CHECK_VENV FALSE
+)
 
 catkin_python_setup()
 

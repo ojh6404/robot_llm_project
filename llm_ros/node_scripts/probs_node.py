@@ -9,7 +9,6 @@ from sensor_msgs.msg import Image
 # from llm_common_msgs.msg import ClipResultStamped
 # from jsk_recognition_msgs.msg import QueryAndProbability
 from llm_common_msgs.msg import Float32MultiArrayStamped, GenerationOutput
-from cv_bridge import CvBridge
 
 class ProbsNode(object):
     def __init__(self):
@@ -32,7 +31,10 @@ class ProbsNode(object):
 
     def gen_output_callback(self, gen_output_msg):
         text = gen_output_msg.gen_output # text should include "Yes" or "No
-        assert text.lower() in ["yes", "no", "yes.", "no."], f"Invalid text: {text}"
+        token_ids = gen_output_msg.token_ids[0].data[:2]
+        # 1939: No, 3869: Yes
+        assert set(token_ids) == set([1939, 3869]), f"Invalid token_ids: {token_ids}"
+        # assert text.lower() in ["yes", "no", "yes.", "no."], f"Invalid text: {text}"
         logits = np.array(gen_output_msg.logits[0].data)
         logits -= np.max(logits)
         # calculate probabilities from logits
